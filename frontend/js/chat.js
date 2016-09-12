@@ -28,6 +28,7 @@ socket.onmessage = (event) => {
 
   if (messageType === 'message') {
     addMessage(message);
+    chatBox.scrollTop = chatBox.clientHeight;
   }
 
   if (messageType === 'updateUsers') {

@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding-top: 60px;
 }
-.panel{
+.panel-body{
   height: 360px;
+  overflow: auto;
 }
