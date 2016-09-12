@@ -2,81 +2,81 @@
 
 const http = require('http');
 const WebSocketServer = require('ws').Server;
-const fs = require('fs');
-
-const indexPage = fs.readFileSync('./index.html');
-
-const host = '127.0.0.1';
+const nstatic = require('node-static');
 const httpPort = 7474;
 const wsPort = 7475;
+const file = new nstatic.Server('./frontend');
 
 const httpServer = http.createServer((req, res) => {
-    res.writeHeader(200, {'Content-Type': 'text/html'});
-    res.end(indexPage);
+  req.addListener('end', function () {
+    file.serve(req, res);
+  }).resume();
 });
 
-httpServer.listen(httpPort, host);
+httpServer.listen(httpPort);
 
 const wss = new WebSocketServer({
-    host,
-    port: wsPort
+  port: wsPort
 })
 
 const users = [];
 const messageHistory = [];
-let userIndex = -1;
 
 wss.on('connection', (ws) => {
   let userName;
 
+  //send message history to the new user
   ws.send(JSON.stringify({
-    type: 'initialData',
+    type: 'messageHistory',
     messageHistory,
-    users
   }));
 
   ws.on('message', (msg) => {
-      console.log(`received: ${msg}`);
+    const message = JSON.parse(msg);
 
-      const message = JSON.parse(msg);
+    if(message.type === "newUser") {
+      //set new user name
+      userName = message.userName ? message.userName.replace(/\W/g, '') : `User${users.length}`;
+      users.push(userName);
 
-      if(message.type === "userIn") {
-        ++userIndex;
-        userName = message.userName ? message.userName.replace(/\W/g, '') : `Anonymous${userIndex}`;
-        users.push(userName);
+      //notify about changes in users list
+      sendUsersList();
+    }
 
-        wss.clients.forEach((client) => {
-          client.send(JSON.stringify({ 
-              type: 'userIn',
-              userName
-            })
-          );
-        });
-      }
+    if(message.type === "message") {
+      const userMessage = { 
+        type: 'message',
+        text: message.text.trim(),
+        userName
+      };
 
-      if(message.type === "message") {
-        wss.clients.forEach((client) => {
-          const userMessage = { 
-              type: 'message',
-              text: message.text.trim(),
-              userName
-            };
-          messageHistory.push(userMessage)
-          client.send(JSON.stringify(userMessage));
-        }); 
-      }
+      //add message to history
+      messageHistory.push(userMessage);
+      //send new message to all users
+      sendToAll(userMessage);
+    }
   });
 
   ws.on('close', (msg) => {
-    wss.clients.forEach((client) => {
-      client.send(JSON.stringify({ 
-          type: 'userOut',
-          userName,
-          userIndex
-        })
-      );
-    });
-  });
+    // remove user from users list
+    const userIndex = users.indexOf(userName);
+    users.splice(userIndex, 1);
 
+    //notify about changes in users list
+    sendUsersList();
+  });
 });
 
+function sendToAll(message) {
+  wss.clients.forEach((client) => {
+    client.send(JSON.stringify(message));
+  });
+}
+
+function sendUsersList() {
+  const message = { 
+    type: 'updateUsers',
+    users
+  };
+  sendToAll(message);
+}

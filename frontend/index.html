@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Chat by Vlad Nadtoka</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="row">
+        <div class="col-xs-9">
+          <div class="panel panel-default">
+            <div class="panel-heading">Chat room</div>
+            <div id="chatBox" class="panel-body">
+            </div>
+          </div>
+          <div class="col-xs-10 col-xs-offset-1">
+            <form name="messageForm">
+              <div class="form-group">
+                <label id="userName" for="messageText"></label>
+                <textarea type="text" class="form-control" id="messageText" rows="4" autocomplete="off"></textarea>
+              </div>
+              <button type="submit" class="btn btn-block btn-primary btn-default">Send message</button>
+            </form>
+          </div>
+        </div>
+        <div class="col-xs-3">
+          <div class="panel panel-default">
+            <div class="panel-heading">Users online</div>
+            <div id="onlineUsersBox" class="panel-body">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/chat.js"></script>
+
+  </body>
+</html>
